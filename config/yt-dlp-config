@@ -1,0 +1,10 @@
+# yt-dlp configuration file
+# Output template for organizing downloads by playlist
+-o "/downloads/%(playlist_title&{}|)s/%(playlist_index&{}|)s%(playlist_index&_|)s%(title)s.%(ext)s"
+
+# Additional settings for better downloads
+--write-description
+--write-info-json
+--write-thumbnail
+--embed-metadata
+--add-metadata
