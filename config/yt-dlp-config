@@ -3,6 +3,5 @@
 -o "/downloads/%(playlist_title&{}|)s/%(playlist_index&{}|)s%(playlist_index&_|)s%(title)s.%(ext)s"
 
 # Additional settings for better downloads
---write-thumbnail
 --embed-metadata
 --add-metadata
