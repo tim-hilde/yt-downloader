@@ -43,7 +43,7 @@ class DownloadJob:
 def is_valid_youtube_url(url):
     """Validate if the URL is a valid YouTube URL"""
     youtube_regex = re.compile(
-        r"(https?://)?(www\.)?(youtube|youtu|youtube-nocookie)\.(com|be)/"
+        r"(https?://)?(www\.)?(m\.)?(youtube\.com|youtu\.be|youtube-nocookie\.com)/"
         r"(watch\?v=|embed/|v/|.+\?v=)?([^&=%\?]{11})"
     )
     return youtube_regex.match(url) is not None
@@ -256,4 +256,3 @@ if __name__ == "__main__":
 
     # Start Flask app
     app.run(host="0.0.0.0", port=5000, debug=False)
-
