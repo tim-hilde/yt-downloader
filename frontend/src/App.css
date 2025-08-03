@@ -1,0 +1,521 @@
+.app {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 60px 20px;
+  min-height: 100vh;
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 60px;
+}
+
+.header h1 {
+  font-size: 48px;
+  font-weight: 600;
+  color: #1d1d1f;
+  margin-bottom: 16px;
+  letter-spacing: -0.003em;
+}
+
+.header p {
+  font-size: 21px;
+  font-weight: 400;
+  color: #86868b;
+  max-width: 600px;
+  margin: 0 auto;
+  line-height: 1.381;
+}
+
+/* URL Input Styles */
+.url-input-container {
+  background: white;
+  border-radius: 18px;
+  padding: 40px;
+  margin-bottom: 40px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
+  border: 1px solid rgba(0, 0, 0, 0.04);
+}
+
+.url-input-form {
+  display: flex;
+  gap: 12px;
+  align-items: stretch;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.url-input {
+  flex: 1;
+  padding: 16px 20px;
+  border: 2px solid #e5e5e7;
+  border-radius: 12px;
+  font-size: 17px;
+  font-family: inherit;
+  transition: all 0.3s ease;
+  background: #fbfbfd;
+}
+
+.url-input:focus {
+  outline: none;
+  border-color: #007aff;
+  background: white;
+  box-shadow: 0 0 0 4px rgba(0, 122, 255, 0.1);
+}
+
+.url-input::placeholder {
+  color: #86868b;
+}
+
+.submit-button {
+  padding: 16px 32px;
+  background: #007aff;
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-size: 17px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+}
+
+.submit-button:hover:not(:disabled) {
+  background: #0056cc;
+  transform: translateY(-1px);
+}
+
+.submit-button:disabled {
+  background: #d1d1d6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Status Messages */
+.status-message {
+  padding: 16px 20px;
+  border-radius: 12px;
+  margin: 20px 0;
+  font-size: 15px;
+  font-weight: 500;
+}
+
+.status-success {
+  background: #d1fadf;
+  color: #30a14e;
+  border: 1px solid #34d058;
+}
+
+.status-error {
+  background: #ffeaea;
+  color: #d73a49;
+  border: 1px solid #f97583;
+}
+
+/* Queue Display */
+.queue-container {
+  background: white;
+  border-radius: 18px;
+  padding: 40px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
+  border: 1px solid rgba(0, 0, 0, 0.04);
+}
+
+.queue-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 32px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #f5f5f7;
+}
+
+.queue-title {
+  font-size: 28px;
+  font-weight: 600;
+  color: #1d1d1f;
+}
+
+.queue-stats {
+  display: flex;
+  gap: 24px;
+  font-size: 15px;
+  color: #86868b;
+}
+
+.queue-stat {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.status-indicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.status-downloading {
+  background: #007aff;
+  /* Disable animation for Pi performance */
+  /* animation: pulse 2s infinite; */
+}
+
+.status-queued {
+  background: #ff9500;
+}
+
+.status-completed {
+  background: #30a14e;
+}
+
+.status-failed {
+  background: #d73a49;
+}
+
+/* Disabled for Pi performance
+ @keyframes pulse {
+   0%, 100% { opacity: 1; }
+   50% { opacity: 0.5; }
+ }
+*/
+
+/* Job Items */
+.jobs-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Section Headers */
+.section-header {
+  margin: 32px 0 16px 0;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #f5f5f7;
+}
+
+.section-header:first-child {
+  margin-top: 0;
+}
+
+.section-header h3 {
+  font-size: 20px;
+  font-weight: 600;
+  color: #1d1d1f;
+  margin: 0;
+}
+
+/* Section Containers */
+.current-download-section,
+.recent-jobs-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.current-download-section .job-item {
+  border: 2px solid #007aff;
+  background: #f0f8ff;
+  position: relative;
+}
+
+.current-download-section .job-item::before {
+  content: "ACTIVE";
+  position: absolute;
+  top: -1px;
+  right: -1px;
+  background: #007aff;
+  color: white;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 4px 8px;
+  border-radius: 0 10px 0 8px;
+  letter-spacing: 0.5px;
+}
+
+.job-item {
+  padding: 24px;
+  background: #fbfbfd;
+  border: 1px solid #f5f5f7;
+  border-radius: 12px;
+  transition: all 0.3s ease;
+}
+
+.job-item:hover {
+  background: #f8f9fa;
+  border-color: #e5e5e7;
+}
+
+.job-header {
+  display: flex;
+  justify-content: between;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 12px;
+}
+
+.job-url {
+  flex: 1;
+  font-size: 15px;
+  color: #1d1d1f;
+  word-break: break-all;
+  line-height: 1.4;
+}
+
+.job-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+}
+
+.job-status.queued {
+  background: #fff5e6;
+  color: #ff9500;
+}
+
+.job-status.downloading {
+  background: #e6f3ff;
+  color: #007aff;
+}
+
+.job-status.completed {
+  background: #e6ffe6;
+  color: #30a14e;
+}
+
+.job-status.failed {
+  background: #ffe6e6;
+  color: #d73a49;
+}
+
+.job-meta {
+  display: flex;
+  gap: 20px;
+  font-size: 13px;
+  color: #86868b;
+  margin-top: 8px;
+}
+
+.job-time {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.job-id {
+  font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
+  font-size: 12px;
+}
+
+.error-message {
+  margin-top: 12px;
+  padding: 12px 16px;
+  background: #ffeaea;
+  border: 1px solid #f97583;
+  border-radius: 8px;
+  font-size: 14px;
+  color: #d73a49;
+  font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
+}
+
+/* Progress Bar Styles */
+.progress-container {
+  margin: 16px 0 12px 0;
+  padding: 16px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border: 1px solid #e9ecef;
+}
+
+.progress-filename {
+  font-size: 14px;
+  color: #495057;
+  margin-bottom: 12px;
+  font-weight: 500;
+  word-break: break-word;
+}
+
+.progress-bar-container {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.progress-bar {
+  flex: 1;
+  height: 8px;
+  background: #e9ecef;
+  border-radius: 4px;
+  overflow: hidden;
+  position: relative;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #007aff, #5ac8fa);
+  border-radius: 4px;
+  transition: width 0.3s ease;
+  position: relative;
+}
+
+.progress-bar-fill::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.3),
+    transparent
+  );
+  animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+.progress-text {
+  font-size: 13px;
+  font-weight: 600;
+  color: #007aff;
+  min-width: 45px;
+  text-align: right;
+}
+
+.progress-details {
+  display: flex;
+  gap: 20px;
+  font-size: 13px;
+  color: #6c757d;
+}
+
+.progress-speed,
+.progress-eta {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-weight: 500;
+}
+
+.progress-speed {
+  color: #28a745;
+}
+
+.progress-eta {
+  color: #fd7e14;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: #86868b;
+}
+
+.empty-state h3 {
+  font-size: 24px;
+  font-weight: 600;
+  margin-bottom: 12px;
+  color: #1d1d1f;
+}
+
+.empty-state p {
+  font-size: 17px;
+  max-width: 400px;
+  margin: 0 auto;
+  line-height: 1.4;
+}
+
+/* Loading States */
+.loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 40px;
+}
+
+.spinner {
+  width: 24px;
+  height: 24px;
+  border: 2px solid #f5f5f7;
+  border-top: 2px solid #007aff;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .app {
+    padding: 40px 16px;
+  }
+  
+  .header h1 {
+    font-size: 36px;
+  }
+  
+  .header p {
+    font-size: 19px;
+  }
+  
+  .url-input-container,
+  .queue-container {
+    padding: 24px;
+  }
+  
+  .url-input-form {
+    flex-direction: column;
+  }
+  
+  .queue-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+  
+  .queue-stats {
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+  
+  .job-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  
+  .job-meta {
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .progress-details {
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .progress-bar-container {
+    gap: 8px;
+  }
+  
+  .progress-text {
+    min-width: 40px;
+    font-size: 12px;
+  }
+}

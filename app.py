@@ -8,24 +8,35 @@ import subprocess
 import threading
 import time
 import uuid
+from collections import OrderedDict
 from datetime import datetime
 from urllib.parse import urlparse
 
 from flask import Flask, jsonify, request
+from flask_cors import CORS
 
 # Configure logging
 logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+    level=logging.INFO,
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    handlers=[logging.StreamHandler()],
 )
 logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
+CORS(app)
 
 # Global queue and status tracking
 download_queue = queue.Queue()
-download_status = {}
+# Use OrderedDict with size limit for memory management
+MAX_STORED_JOBS = 100
+download_status = OrderedDict()
 current_download = None
 worker_thread = None
+
+# Rate limiting
+last_request_times = {}
+RATE_LIMIT_WINDOW = 5  # seconds
 
 
 class DownloadJob:
@@ -38,6 +49,21 @@ class DownloadJob:
         self.completed_at = None
         self.error = None
         self.output = None
+        # Progress tracking
+        self.progress = {
+            "percent": 0,
+            "speed": None,
+            "eta": None,
+            "downloaded_bytes": 0,
+            "total_bytes": 0,
+            "filename": None,
+        }
+        self.progress_lock = threading.Lock()
+
+    def update_progress(self, progress_data):
+        """Thread-safe progress update"""
+        with self.progress_lock:
+            self.progress.update(progress_data)
 
 
 def is_valid_youtube_url(url):
@@ -47,6 +73,34 @@ def is_valid_youtube_url(url):
         r"(watch\?v=|embed/|v/|.+\?v=)?([^&=%\?]{11})"
     )
     return youtube_regex.match(url) is not None
+
+
+def parse_progress_line(line):
+    """Parse yt-dlp progress output line"""
+    progress_data = {}
+
+    # Pattern for download progress: [download]  45.2% of 1.23GiB at 2.34MiB/s ETA 00:05:23
+    download_pattern = r"\[download\]\s+(\d+\.?\d*)%\s+of\s+([\d\.]+\w+)?\s*(?:at\s+([\d\.]+\w+/s))?\s*(?:ETA\s+(\d+:\d+:\d+))?"
+    match = re.search(download_pattern, line)
+
+    if match:
+        progress_data["percent"] = float(match.group(1))
+        if match.group(2):
+            progress_data["total_size"] = match.group(2)
+        if match.group(3):
+            progress_data["speed"] = match.group(3)
+        if match.group(4):
+            progress_data["eta"] = match.group(4)
+
+    # Pattern for filename: [download] Destination: filename.mp4
+    filename_pattern = r"\[download\] Destination: (.+)"
+    filename_match = re.search(filename_pattern, line)
+    if filename_match:
+        progress_data["filename"] = filename_match.group(1).split("/")[
+            -1
+        ]  # Just the filename
+
+    return progress_data
 
 
 def download_worker():
@@ -74,32 +128,65 @@ def download_worker():
                 "mp4",
                 "--config-location",
                 "/app/config/yt-dlp-config",
+                "--progress",  # Enable progress output
                 job.url,
             ]
 
             # Execute download
             try:
-                result = subprocess.run(
+                # Start process with real-time output capture
+                process = subprocess.Popen(
                     cmd,
-                    capture_output=True,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.STDOUT,
                     text=True,
                     cwd="/downloads",
-                    timeout=3600,  # 1 hour timeout
+                    bufsize=1,
+                    universal_newlines=True,
                 )
 
-                if result.returncode == 0:
+                output_lines = []
+
+                # Read output line by line for real-time progress
+                while True:
+                    line = process.stdout.readline()
+                    if not line and process.poll() is not None:
+                        break
+
+                    if line:
+                        line = line.strip()
+                        output_lines.append(line)
+
+                        # Parse progress information
+                        progress_data = parse_progress_line(line)
+                        if progress_data:
+                            job.update_progress(progress_data)
+                            logger.debug(
+                                f"Progress update for job {job.id}: {progress_data}"
+                            )
+
+                # Wait for process to complete
+                return_code = process.wait(timeout=3600)  # 1 hour timeout
+
+                if return_code == 0:
                     job.status = "completed"
-                    job.output = result.stdout
+                    job.output = "\n".join(output_lines)
+                    # Set final progress to 100%
+                    job.update_progress({"percent": 100})
                     logger.info(f"Successfully completed download for job {job.id}")
                 else:
                     job.status = "failed"
-                    job.error = result.stderr
-                    logger.error(f"Download failed for job {job.id}: {result.stderr}")
+                    job.error = "\n".join(output_lines)
+                    logger.error(f"Download failed for job {job.id}: {job.error}")
 
             except subprocess.TimeoutExpired:
                 job.status = "failed"
                 job.error = "Download timeout (1 hour limit exceeded)"
                 logger.error(f"Download timeout for job {job.id}")
+                try:
+                    process.kill()
+                except:
+                    pass
 
             except Exception as e:
                 job.status = "failed"
@@ -175,32 +262,40 @@ def get_status():
         # Get recent jobs (last 50)
         recent_jobs = []
         for job_id, job in list(download_status.items())[-50:]:
-            recent_jobs.append(
-                {
-                    "job_id": job.id,
-                    "url": job.url,
-                    "status": job.status,
-                    "created_at": job.created_at.isoformat(),
-                    "started_at": job.started_at.isoformat()
-                    if job.started_at
-                    else None,
-                    "completed_at": job.completed_at.isoformat()
-                    if job.completed_at
-                    else None,
-                    "error": job.error,
-                }
-            )
+            job_data = {
+                "job_id": job.id,
+                "url": job.url,
+                "status": job.status,
+                "created_at": job.created_at.isoformat(),
+                "started_at": job.started_at.isoformat() if job.started_at else None,
+                "completed_at": job.completed_at.isoformat()
+                if job.completed_at
+                else None,
+                "error": job.error,
+            }
+
+            # Add progress data if downloading
+            if job.status == "downloading":
+                with job.progress_lock:
+                    job_data["progress"] = job.progress.copy()
+
+            recent_jobs.append(job_data)
+
+        current_download_data = None
+        if current_download:
+            current_download_data = {
+                "job_id": current_download.id,
+                "url": current_download.url,
+                "started_at": current_download.started_at.isoformat(),
+            }
+            # Add progress data
+            with current_download.progress_lock:
+                current_download_data["progress"] = current_download.progress.copy()
 
         return jsonify(
             {
                 "queue_size": download_queue.qsize(),
-                "current_download": {
-                    "job_id": current_download.id,
-                    "url": current_download.url,
-                    "started_at": current_download.started_at.isoformat(),
-                }
-                if current_download
-                else None,
+                "current_download": current_download_data,
                 "recent_jobs": recent_jobs,
             }
         )
@@ -219,20 +314,23 @@ def get_download_status(job_id):
 
         job = download_status[job_id]
 
-        return jsonify(
-            {
-                "job_id": job.id,
-                "url": job.url,
-                "status": job.status,
-                "created_at": job.created_at.isoformat(),
-                "started_at": job.started_at.isoformat() if job.started_at else None,
-                "completed_at": job.completed_at.isoformat()
-                if job.completed_at
-                else None,
-                "error": job.error,
-                "output": job.output,
-            }
-        )
+        job_data = {
+            "job_id": job.id,
+            "url": job.url,
+            "status": job.status,
+            "created_at": job.created_at.isoformat(),
+            "started_at": job.started_at.isoformat() if job.started_at else None,
+            "completed_at": job.completed_at.isoformat() if job.completed_at else None,
+            "error": job.error,
+            "output": job.output,
+        }
+
+        # Add progress data if downloading
+        if job.status == "downloading":
+            with job.progress_lock:
+                job_data["progress"] = job.progress.copy()
+
+        return jsonify(job_data)
 
     except Exception as e:
         logger.error(f"Error getting download status: {str(e)}")
