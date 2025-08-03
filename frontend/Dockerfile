@@ -3,11 +3,12 @@ FROM node:18-alpine AS builder
 
 WORKDIR /app
 
-# Copy package files
+# Copy package files and env
 COPY package*.json ./
+COPY .env ./
 
-# Install dependencies (production only for smaller size)
-RUN npm ci --only=production --silent
+# Install all dependencies for build
+RUN npm ci --silent
 
 # Copy source code
 COPY public/ ./public/
@@ -29,7 +30,7 @@ COPY --from=builder /app/build ./build
 
 # Create non-root user
 RUN addgroup -g 1001 -S nodejs && \
-    adduser -S reactuser -u 1001
+  adduser -S reactuser -u 1001
 
 # Switch to non-root user
 USER reactuser
@@ -43,3 +44,7 @@ HEALTHCHECK --interval=60s --timeout=10s --start-period=30s --retries=3 \
 
 # Start the application
 CMD ["serve", "-s", "build", "-l", "3000"]
+
+
+
+

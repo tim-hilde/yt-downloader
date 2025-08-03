@@ -70,7 +70,7 @@ const QueueDisplay = memo(({ data }) => {
         <div className="jobs-list">
           {/* Current download section */}
           {current_download && (
-            <>
+            <React.Fragment>
               <div className="section-header">
                 <h3>Currently Downloading</h3>
               </div>
@@ -83,12 +83,12 @@ const QueueDisplay = memo(({ data }) => {
                   isCurrent={true}
                 />
               </div>
-            </>
+            </React.Fragment>
           )}
           
           {/* Recent jobs section */}
           {filteredRecentJobs.length > 0 && (
-            <>
+            <React.Fragment>
               <div className="section-header">
                 <h3>Recent Downloads</h3>
               </div>
@@ -99,12 +99,13 @@ const QueueDisplay = memo(({ data }) => {
                     <JobItem key={job.job_id} job={job} />
                   ))}
               </div>
-            </>
+            </React.Fragment>
           )}
         </div>
       )}
     </div>
   );
-};
+});
 
 export default QueueDisplay;
+

@@ -90,6 +90,7 @@ const JobItem = memo(({ job, isCurrent = false }) => {
       </div>
     );
   };
+
   return (
     <div className={`job-item ${isCurrent ? 'current-job' : ''}`}>
       <div className="job-header">
@@ -143,6 +144,7 @@ const JobItem = memo(({ job, isCurrent = false }) => {
       )}
     </div>
   );
-};
+});
 
 export default JobItem;
+
