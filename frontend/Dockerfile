@@ -1,11 +1,13 @@
 # Multi-stage build for smaller image size and better Pi performance
 FROM node:18-alpine AS builder
 
+ARG REACT_APP_API_URL
+ENV REACT_APP_API_URL=$REACT_APP_API_URL
+
 WORKDIR /app
 
-# Copy package files and env
+# Copy package files
 COPY package*.json ./
-COPY .env ./
 
 # Install all dependencies for build
 RUN npm ci --silent

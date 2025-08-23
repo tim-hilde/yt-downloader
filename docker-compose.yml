@@ -28,12 +28,14 @@ services:
         max-file: "3"
 
   frontend:
-    build: ./frontend
+    build:
+      context: ./frontend
+      args:
+        - REACT_APP_API_URL=http://raspberrypi.local:5001
     container_name: yt-downloader-frontend
     ports:
       - "3000:3000"
     environment:
-      - REACT_APP_API_URL=http://localhost:5001
       - NODE_ENV=production
     restart: unless-stopped
     depends_on:
